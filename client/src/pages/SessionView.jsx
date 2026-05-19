@@ -19,8 +19,10 @@ const Q_COLOR = { S: '#2563eb', W: '#dc2626', O: '#16a34a', T: '#d97706' };
 
 export default function SessionView({ session, identity, emit, connected, aiThinking }) {
   if (!session) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#64748b', fontSize: 18 }}>
-      Подключение к сессии...
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#64748b', gap: 16 }}>
+      <div style={{ width: 40, height: 40, border: '3px solid #e2e8f0', borderTop: '3px solid #2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div style={{ fontSize: 16 }}>Подключение к сессии...</div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
@@ -30,6 +32,13 @@ export default function SessionView({ session, identity, emit, connected, aiThin
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+      {/* Reconnecting banner */}
+      {!connected && (
+        <div style={{ background: '#dc2626', color: '#fff', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 600 }}>
+          <div style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+          Соединение потеряно — переподключение... Ваши данные сохранены, никуда не уходите.
+        </div>
+      )}
       {/* Header */}
       <div style={{ background: '#1a1a2e', color: '#fff', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div>

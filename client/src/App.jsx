@@ -28,13 +28,24 @@ export default function App() {
 
   const connectSocket = useCallback((sessionId, initials, isMod, modToken) => {
     if (socket) socket.disconnect();
-    socket = io();
+    socket = io({
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
 
     socket.on('connect', () => {
       setConnected(true);
       socket.emit('join', { sessionId, initials, modToken });
     });
-    socket.on('disconnect', () => setConnected(false));
+
+    socket.on('disconnect', (reason) => {
+      setConnected(false);
+      // Socket.io will auto-reconnect; on reconnect 'connect' fires again → re-join
+    });
+
+    socket.on('connect_error', () => setConnected(false));
 
     socket.on('session:state', (s) => setSession(s));
     socket.on('session:stage', (stage) => setSession(prev => prev ? { ...prev, stage } : prev));
