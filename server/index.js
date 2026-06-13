@@ -295,6 +295,32 @@ io.on('connection', (socket) => {
     io.to(sessionId).emit('action:added', { intersectionKey, action });
   });
 
+  socket.on('action:delete', ({ intersectionKey, actionId }) => {
+    const { sessionId, initials } = socket.data;
+    const session = getSession(sessionId);
+    if (!session || session.stage !== 6) return;
+    const acts = session.actions[intersectionKey];
+    if (!acts) return;
+    const idx = acts.findIndex(a => a.id === actionId && a.authorInitials === initials);
+    if (idx === -1) return;
+    acts.splice(idx, 1);
+    saveSession(sessionId, session);
+    io.to(sessionId).emit('action:deleted', { intersectionKey, actionId });
+  });
+
+  socket.on('action:update', ({ intersectionKey, actionId, text }) => {
+    const { sessionId, initials } = socket.data;
+    const session = getSession(sessionId);
+    if (!session || session.stage !== 6) return;
+    const acts = session.actions[intersectionKey];
+    if (!acts) return;
+    const action = acts.find(a => a.id === actionId && a.authorInitials === initials);
+    if (!action) return;
+    action.text = text.trim();
+    saveSession(sessionId, session);
+    io.to(sessionId).emit('action:updated', { intersectionKey, action });
+  });
+
   // ── STAGE 7: Vote for action ──────────────────────────────────────────────
   socket.on('action:vote', ({ intersectionKey, actionId }) => {
     const { sessionId, initials } = socket.data;

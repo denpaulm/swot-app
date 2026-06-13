@@ -95,11 +95,30 @@ export default function Stage6_Actions({ session, identity, emit }) {
 
 function IntersectionCard({ intersectionKey, matKey, rowText, colText, weight, color, bg, myFilled, actions, initials, emit }) {
   const [text, setText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
   const submit = () => {
     if (!text.trim()) return;
     emit('action:add', { intersectionKey, text: text.trim() });
     setText('');
+  };
+
+  const startEdit = (a) => {
+    setEditingId(a.id);
+    setEditText(a.text);
+  };
+
+  const saveEdit = () => {
+    if (!editText.trim()) return;
+    emit('action:update', { intersectionKey, actionId: editingId, text: editText.trim() });
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const deleteAction = (actionId) => {
+    emit('action:delete', { intersectionKey, actionId });
   };
 
   return (
@@ -118,14 +137,41 @@ function IntersectionCard({ intersectionKey, matKey, rowText, colText, weight, c
       </div>
 
       <div style={{ padding: 14 }}>
-        {/* Existing actions */}
-        {actions.map(a => (
-          <div key={a.id} style={{ fontSize: 13, padding: '8px 12px', background: a.authorInitials === initials ? `${color}0d` : '#f8fafc',
-            border: `1px solid ${a.authorInitials === initials ? color + '33' : '#e2e8f0'}`, borderRadius: 7, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-            <span>{a.text}</span>
-            <span style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>{a.authorInitials}</span>
-          </div>
-        ))}
+        {actions.map(a => {
+          const isMine = a.authorInitials === initials;
+          if (editingId === a.id) {
+            return (
+              <div key={a.id} style={{ marginBottom: 6 }}>
+                <textarea value={editText} onChange={e => setEditText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); } if (e.key === 'Escape') cancelEdit(); }}
+                  rows={2}
+                  autoFocus
+                  style={{ width: '100%', padding: '8px 12px', border: `1.5px solid ${color}`, borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                  <button onClick={saveEdit} style={{ padding: '4px 12px', background: color, color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Сохранить</button>
+                  <button onClick={cancelEdit} style={{ padding: '4px 12px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Отмена</button>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={a.id} style={{ fontSize: 13, padding: '8px 12px', background: isMine ? `${color}0d` : '#f8fafc',
+              border: `1px solid ${isMine ? color + '33' : '#e2e8f0'}`, borderRadius: 7, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+              <span style={{ flex: 1 }}>{a.text}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>{a.authorInitials}</span>
+                {isMine && (
+                  <>
+                    <button onClick={() => startEdit(a)} title="Редактировать"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748b', padding: '0 2px', lineHeight: 1 }}>✏</button>
+                    <button onClick={() => deleteAction(a.id)} title="Удалить"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', padding: '0 2px', lineHeight: 1 }}>✕</button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {/* Add action */}
         <div style={{ display: 'flex', gap: 8, marginTop: actions.length ? 8 : 0 }}>

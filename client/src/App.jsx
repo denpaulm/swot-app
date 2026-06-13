@@ -121,6 +121,23 @@ export default function App() {
         return { ...prev, actions };
       }));
 
+    socket.on('action:deleted', ({ intersectionKey, actionId }) =>
+      setSession(prev => {
+        if (!prev) return prev;
+        const actions = { ...prev.actions };
+        actions[intersectionKey] = (actions[intersectionKey] || []).filter(a => a.id !== actionId);
+        return { ...prev, actions };
+      }));
+
+    socket.on('action:updated', ({ intersectionKey, action }) =>
+      setSession(prev => {
+        if (!prev) return prev;
+        const actions = { ...prev.actions };
+        actions[intersectionKey] = (actions[intersectionKey] || []).map(a =>
+          a.id === action.id ? action : a);
+        return { ...prev, actions };
+      }));
+
     socket.on('ai:thinking', (v) => setAiThinking(v));
     socket.on('error', (msg) => alert('Ошибка: ' + msg));
   }, []);
