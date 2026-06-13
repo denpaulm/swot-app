@@ -50,17 +50,6 @@ app.get('/api/sessions/:id/export', (req, res) => {
   res.send(buffer);
 });
 
-// ── ONE-TIME SESSION RESTORE — REMOVE AFTER USE ──────────────────────────────
-app.post('/api/restore-session', express.json({ limit: '20mb' }), (req, res) => {
-  if (req.headers['x-restore-secret'] !== 'RESTORE-82C5B530-ONCE') {
-    return res.status(403).json({ error: 'forbidden' });
-  }
-  const session = req.body;
-  if (!session || !session.id) return res.status(400).json({ error: 'invalid' });
-  saveSession(session.id, session);
-  res.json({ ok: true, id: session.id, stage: session.stage });
-});
-
 // ── SPA fallback ─────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(join(clientDist, 'index.html'));
