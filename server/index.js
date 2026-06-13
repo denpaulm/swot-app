@@ -258,7 +258,7 @@ io.on('connection', (socket) => {
   });
 
   // ── STAGE 4: Mod selects top theses ──────────────────────────────────────
-  socket.on('mod:setTopTheses', ({ topTheses }) => {
+  socket.on('mod:setTopTheses', ({ topTheses }, ack) => {
     const { sessionId, isMod } = socket.data;
     if (!isMod) return;
     const session = getSession(sessionId);
@@ -266,6 +266,7 @@ io.on('connection', (socket) => {
     session.topTheses = topTheses;
     saveSession(sessionId, session);
     io.to(sessionId).emit('topTheses:update', topTheses);
+    if (typeof ack === 'function') ack({ ok: true });
   });
 
   // ── STAGE 5: Mod toggles matrix cell ─────────────────────────────────────

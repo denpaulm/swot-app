@@ -17,6 +17,7 @@ function calcAvg(scores, id) {
 export default function Stage4_TopSelection({ session, identity, emit, isMod }) {
   const [selected, setSelected] = useState({ S: [], W: [], O: [], T: [] });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Init from existing topTheses on mount
   useEffect(() => {
@@ -38,14 +39,21 @@ export default function Stage4_TopSelection({ session, identity, emit, isMod }) 
   };
 
   const save = () => {
+    if (saving) return;
     const topTheses = {};
     for (const q of ['S', 'W', 'O', 'T']) {
       const sorted = getSorted(q);
       topTheses[q] = sorted.filter(t => selected[q].includes(t.id));
     }
-    emit('mod:setTopTheses', { topTheses });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSaving(true);
+    setSaved(false);
+    emit('mod:setTopTheses', { topTheses }, (ack) => {
+      setSaving(false);
+      if (ack?.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    });
   };
 
   const getSorted = (q) => {
@@ -68,9 +76,9 @@ export default function Stage4_TopSelection({ session, identity, emit, isMod }) 
           <span style={{ fontSize: 14, color: '#5b21b6' }}>
             Выберите тезисы для матрицы · Выбрано: <b>{totalSelected}</b> (рекомендуется 5–8 на квадрант)
           </span>
-          <button onClick={save}
-            style={{ marginLeft: 'auto', padding: '9px 28px', background: saved ? '#16a34a' : '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14, transition: 'background 0.2s' }}>
-            {saved ? '✓ Сохранено!' : 'Сохранить отбор'}
+          <button onClick={save} disabled={saving}
+            style={{ marginLeft: 'auto', padding: '9px 28px', background: saved ? '#16a34a' : saving ? '#94a3b8' : '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, cursor: saving ? 'wait' : 'pointer', fontWeight: 700, fontSize: 14, transition: 'background 0.2s' }}>
+            {saved ? '✓ Сохранено на сервере!' : saving ? 'Сохраняю...' : 'Сохранить отбор'}
           </button>
         </div>
       )}

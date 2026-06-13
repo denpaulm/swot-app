@@ -149,8 +149,8 @@ export default function App() {
     setPage('session');
   }, [connectSocket]);
 
-  const emit = useCallback((event, data) => {
-    if (socket) socket.emit(event, data);
+  const emit = useCallback((event, data, callback) => {
+    if (socket) socket.emit(event, data, callback);
   }, []);
 
   if (page === 'home' || !identity?.initials) {
